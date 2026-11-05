@@ -1,0 +1,73 @@
+schema_version: 1
+dataset:
+  root: data/generated/final
+  allow_holdout: false
+rules:
+  version: rule-v2.1
+  metric_version: strict-v1
+  iou_threshold: 0.5
+  exact_match_only: true
+  high_risk_types: [ID_CARD, BANK_CARD, PASSPORT, PHONE, MEDICAL_ID]
+  weights: {ID_CARD: 5, BANK_CARD: 5, PASSPORT: 5, PHONE: 3, MEDICAL_ID: 3, EMAIL: 3, NAME: 2, ADDRESS: 2, BIRTH_DATE: 1.5, PLATE: 1.5, DATE: 0.5, ORG: 0.5}
+model: demo-student
+models:
+  demo-student: {adapter: local, detector: regex, version: demo-student-v1, prompt_version: pii-span-v1}
+  demo-teacher: {adapter: local, detector: regex_teacher, version: demo-teacher-v1, prompt_version: pii-span-v1}
+  demo-routed: {adapter: local, detector: routed, student: demo-student, teacher: demo-teacher, version: demo-routed-v1, confidence: 0.85, teacher_max_ratio: 1.0, prompt_version: pii-span-v1}
+  # 真实服务接入前填写 endpoint；不会因为读取配置就自动发起请求。
+  student: {adapter: local, detector: http, version: student-v3-int8, prompt_version: p2.4, endpoint_env: STUDENT_ENDPOINT, api_key_env: STUDENT_API_KEY}
+  teacher: {adapter: local, detector: chat, version: teacher-model, prompt_version: p2.4, endpoint_env: TEACHER_ENDPOINT, api_key_env: TEACHER_API_KEY}
+  pipeline: {adapter: http_pipeline, version: pipeline-v1, prompt_version: p2.4, endpoint_env: PIPELINE_ENDPOINT, api_key_env: PIPELINE_API_KEY}
+execution:
+  concurrency: 16
+  shard_size: 200
+  retry_max: 3
+  retry_backoff_seconds: 0.1
+  timeout_seconds: 120
+  bootstrap: 1000
+  seed: 42
+  cache_enabled: true
+  cache_dir: runtime/cache
+  cache_ttl_days: 7
+  request_interval_seconds: 0.0
+  resume: true
+ocr:
+  endpoint_env: OCR_ENDPOINT
+  timeout_seconds: 60
+judge:
+  enabled: false
+  model: ''
+  max_ratio: 0.04
+  threshold: 0.8
+  human_audit_rate: 0.05
+  calibration_path: runtime/judge-calibration.json
+langfuse:
+  enabled: false
+  dataset: pii-eval
+  sync_dataset: true
+  annotation_queue_id_env: LANGFUSE_ANNOTATION_QUEUE_ID
+storage:
+  enabled: false
+  database_url_env: DATABASE_URL
+  clickhouse_enabled: false
+gate:
+  min_per_high_risk_type: 50
+  require_real_quality: false
+  thresholds:
+    high_risk_recall: {hard: 0.98, soft: 0.99, dir: min}
+    overall_f1: {hard: -0.010, soft: -0.003, dir: rel_min}
+    complex_f1: {hard: -0.020, soft: -0.005, dir: rel_min}
+    false_delete: {hard: 0.015, soft: 0.010, dir: max}
+    risk_score: {hard: 1.05, soft: 1.00, dir: rel_max}
+    latency_p95: {hard: 1.30, soft: 1.10, dir: rel_max}
+    file_openable: {hard: 1.0, soft: 1.0, dir: min}
+monitor:
+  recall_daily_drop: 0.02
+  recall_days: 3
+  min_daily_audit: 200
+  false_delete_multiplier: 1.5
+  latency_multiplier: 1.3
+  latency_duration_minutes: 60
+  cost_multiplier: 1.2
+  teacher_max_ratio: 0.3
+  parse_failure_max: 0.005

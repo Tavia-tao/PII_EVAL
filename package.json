@@ -1,0 +1,8 @@
+{
+  "name": "pii-eval-report-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node --test tests/report-ui.test.mjs"},
+  "devDependencies": {"jsdom": "27.4.0"},
+  "engines": {"node": ">=24"}
+}

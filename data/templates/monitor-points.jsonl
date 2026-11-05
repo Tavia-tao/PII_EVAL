@@ -1,0 +1,4 @@
+{"timestamp":"2026-11-01T00:00:00+08:00","high_risk_recall":0.99,"audited_n":200,"false_delete":0.01,"latency_p95":1.0,"token_cost":0.01,"teacher_rate":0.1,"parse_failure_rate":0.001}
+{"timestamp":"2026-11-02T00:00:00+08:00","high_risk_recall":0.96,"audited_n":200,"false_delete":0.02,"latency_p95":1.5,"token_cost":0.02,"teacher_rate":0.5,"parse_failure_rate":0.01}
+{"timestamp":"2026-11-03T00:00:00+08:00","high_risk_recall":0.93,"audited_n":200,"false_delete":0.02,"latency_p95":1.5,"token_cost":0.02,"teacher_rate":0.5,"parse_failure_rate":0.01}
+{"timestamp":"2026-11-04T00:00:00+08:00","high_risk_recall":0.90,"audited_n":200,"false_delete":0.02,"latency_p95":1.5,"token_cost":0.02,"teacher_rate":0.5,"parse_failure_rate":0.01}

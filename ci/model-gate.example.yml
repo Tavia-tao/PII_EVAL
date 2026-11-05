@@ -1,0 +1,27 @@
+# 真实候选模型门禁示例，复制为 .github/workflows/model-gate.yml 并注入组织凭据后使用。
+# 这里没有部署步骤。数据/基线必须是独立审批后的同一版本，不得用当前候选自建基线。
+name: Real model gate
+on: [workflow_dispatch]
+permissions: {contents: read}
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      STUDENT_ENDPOINT: ${{ secrets.STUDENT_ENDPOINT }}
+      STUDENT_API_KEY: ${{ secrets.STUDENT_API_KEY }}
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+      LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+      DEEPEVAL_TELEMETRY_OPT_OUT: 'YES'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: {version: '0.12.2'}
+      - run: uv sync --frozen --python 3.11
+      # data/approved 与 conf/approved-baseline.json 由组织的受控数据分发步骤提供。
+      - run: uv run pii-eval run --config conf/production.yaml --data data/approved --model student --split gate --out reports/candidate
+      - run: uv run pii-eval gate --config conf/production.yaml --report reports/candidate/report.json --baseline conf/approved-baseline.json --level L1 --out reports/candidate/gate.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: real-model-gate, path: reports/candidate/}

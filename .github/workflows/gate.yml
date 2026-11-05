@@ -1,0 +1,50 @@
+name: PII evaluation gate
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+permissions:
+  contents: read
+jobs:
+  test-and-engineering-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DEEPEVAL_TELEMETRY_OPT_OUT: 'YES'
+      DEEPEVAL_UPDATE_WARNING_OPT_OUT: 'YES'
+      UV_LINK_MODE: copy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.2'
+          enable-cache: true
+      - run: uv sync --frozen --python 3.11
+      - uses: actions/setup-node@v4
+        with: {node-version: '24', cache: npm}
+      - run: npm ci --ignore-scripts
+      - name: Synthetic scan CJK font
+        run: sudo apt-get update && sudo apt-get install -y fonts-wqy-zenhei
+      - name: Static and behavioral checks
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pytest -q
+          npm test
+      - name: Generate standard and complex fixtures
+        run: uv run pii-eval generate --out data/generated/ci --standard 14000 --complex 2000 --gate 1500
+      - name: Full gate / repeatability / five fault controls
+        run: uv run pii-eval verify --data data/generated/ci --out reports/ci
+      - name: Package
+        run: uv build --no-sources
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pii-eval-evidence
+          path: |
+            reports/ci/acceptance.json
+            reports/ci/repeat_1/report.*
+            reports/ci/repeat_1/failures.jsonl
+            dist/
+          retention-days: 14

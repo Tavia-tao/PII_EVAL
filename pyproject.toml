@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pii-eval"
+version = "1.0.0"
+description = "可复现、可归因的 PII 检测与脱敏流水线评测"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "pydantic>=2.10,<3", "PyYAML>=6.0,<7", "httpx>=0.28,<1",
+  "numpy>=2.0,<3", "scipy>=1.14,<2", "deepeval>=3.0,<6",
+  "langfuse>=3.0,<6", "PyMuPDF>=1.25,<2", "python-docx>=1.1,<2",
+  "reportlab>=4.2,<5", "Pillow>=11,<13",
+  "SQLAlchemy>=2.0,<3", "psycopg[binary]>=3.2,<4", "clickhouse-connect>=0.8,<1",
+]
+
+[project.scripts]
+pii-eval = "src.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.3,<10", "pytest-asyncio>=0.25,<2", "ruff>=0.11,<1", "build>=1.2,<2"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+force-include = {"conf/eval.yaml" = "src/defaults/eval.yaml", "conf/rules.yaml" = "src/defaults/rules.yaml"}
+
+[tool.hatch.build.targets.sdist]
+include = ["src/", "conf/", "docs/", "tests/", "data/templates/", "ci/", ".github/", "README.md", "pyproject.toml", "uv.lock", "requirements.lock.txt", "package.json", "package-lock.json", "Dockerfile", ".dockerignore", ".env.example", ".python-version"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 110
+extend-exclude = [".tools", "reports", "data/generated"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]

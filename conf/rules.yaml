@@ -1,0 +1,21 @@
+version: rule-v2.1
+offset: unicode_codepoint_half_open
+exact_only: true
+partial_is_fp_and_fn: true
+nesting: allowed
+crossing: forbidden
+dates:
+  pii: [出生日期, 生日, 入职日期, 证件有效期]
+  not_pii: [合同签订日, 报表期间, 产品发布日期, 系统日志, 季度]
+  ambiguous: dual_review_required
+review:
+  independent_reviewers: 2
+  double_annotation_rate: 0.20
+  expert_audit_rate: 0.05
+  teacher_audit_rate: 0.10
+  kappa_hard: 0.80
+  kappa_soft: 0.85
+  expert_error_max: 0.01
+governance:
+  weights_status: pending_compliance_approval
+  thresholds_status: example_pending_baseline_calibration

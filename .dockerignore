@@ -1,0 +1,11 @@
+.git
+.venv
+runtime
+reports
+tmp
+data/generated
+dist
+tests
+__pycache__
+.env
+deliverables
